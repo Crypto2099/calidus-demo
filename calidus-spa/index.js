@@ -14,7 +14,7 @@ app.use((req, res, next) => {
     next();
 });
 
-const PORT = 3000;
+const PORT = 3050;
 const NONCE_EXPIRY = 300000; // 5 minutes
 const HASH_NONCE_BEFORE_RETURN = false;  // Set false to disable hashing the nonce before returning to frontend
 const HASH_NONCE_BEFORE_VERIFY = false;  // Set false to skip hashing when verifying
