@@ -1,9 +1,10 @@
 import './App.css';
-import { Button, Image, TextInput } from '@mantine/core';
+import { Button, Image, TextInput, Tooltip, ActionIcon, CopyButton, CheckIcon } from '@mantine/core';
 import '@mantine/core/styles.css';
 import { useState, useEffect } from 'react';
 import { requestAuth } from './service/requestAuth';
-import { verifySignature } from './service/verifySignature';
+import { verifySignature } from './service/verifySignature'
+import { notifications } from '@mantine/notifications';
 
 function App() {
   const [calidusKey, setCalidusKey] = useState('');
@@ -31,8 +32,12 @@ function App() {
     try {
       const response = await requestAuth(calidusKey, poolId);
       if (response) {
-        alert('Nonce requested successfully');
-        
+
+        notifications.show({
+          title: 'Successfully requested nonce',
+          color: 'green',
+          message: 'Please copy the nonce and sign it using your signature',
+        })
         // Save to localStorage
         localStorage.setItem('nonceData', JSON.stringify(response));
         localStorage.setItem('authStep', '1');
@@ -57,8 +62,6 @@ function App() {
     try {
       setVerificationStatus('');
       const response = await verifySignature(nonceData, signature, nonceData.calidusId);
-      console.log(response)
-      console.log(nonceData)
       setVerificationStatus('success');
       alert(response.message || 'Verification successful!');
       
@@ -88,7 +91,7 @@ function App() {
 
   return (
     <div className="App">
-      <Image src={'./FullLogo_Transparent.png'} w={'40vw'} h={"auto"}/>
+      <Image src={'./FullLogo_Transparent.png'} w={'30vw'} h={"auto"}/>
       <div className='Calidus-Container'>
       {step === 0 ?
       <>
@@ -106,6 +109,17 @@ function App() {
             type="text"
             placeholder="Nonce (copy this value)"
             value={nonceData.nonce}
+            rightSection={
+              <CopyButton value={nonceData.nonce} timeout={2000}>
+              {({ copied, copy }) => (
+                <Tooltip label={copied ? 'Copied' : 'Copy'} withArrow position="right">
+                  <ActionIcon color={copied ? 'teal' : 'gray'} variant="subtle" onClick={copy}>
+                    <Image src={'./clipboard-copy.svg'} w={24} h={24}/>
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </CopyButton>
+            }
             readOnly
             w={'100%'}
           />

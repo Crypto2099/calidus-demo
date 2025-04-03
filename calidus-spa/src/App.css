@@ -20,9 +20,16 @@ width: 50%;
   
 }
 
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .Calidus-Container {
+    width: 80%;
+  }
+}
+
 .glow-background {
   position: absolute;
-  bottom: -80%;
+  top: 50%;
   left: 50%;
   transform: translateX(-50%);
   width: 100vw;
@@ -34,4 +41,10 @@ width: 50%;
     0 0 160px 80px rgba(162, 0, 255, 0.08);
   filter: blur(12px);
   z-index: 0;
+
+  @media (max-width: 768px) {
+
+      top: 0%;
+
+  }
 }

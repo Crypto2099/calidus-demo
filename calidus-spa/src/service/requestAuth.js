@@ -1,7 +1,6 @@
 export const requestAuth = async (calidusKey, poolId) => {
     try {
-        console.log('here')
-        const response = await fetch(`http://localhost:3050/request-auth`, {
+        const response = await fetch(`${process.env.REACT_APP_SERVICE_API_URL}/request-auth`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 export const verifySignature = async (nonceData, signature, calidusKey) => {
     try {
-      const response = await fetch(`http://localhost:3050/verify-signature`, {
+      const response = await fetch(`${process.env.REACT_APP_SERVICE_API_URL}/verify-signature`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
