@@ -131,36 +131,37 @@ app.post('/request-auth', async (req, res) => {
 
 // Step 4: Verify Signature
 app.post('/verify-signature', (req, res) => {
-    const {nonce, calidusKey, signature} = req.body;
-
+    const {nonce, signature, calidusKey, nonceData} = req.body;
+    console.log(nonce, signature, calidusKey, nonceData)
     if (!nonce || !calidusKey || !signature) {
         console.error('❌ Signature verification failed: Missing required fields.');
         return res.status(400).send({error: 'Missing required fields: nonce, calidusKey, signature.'});
     }
 
-    const nonceData = nonceStore[nonce];
+    // Get stored nonce data
+    const storedNonceData = nonceStore[nonce];
 
-    if (!nonceData) {
+    if (!storedNonceData) {
         console.error(`❌ Invalid or expired nonce: ${nonce}`);
         return res.status(400).send({error: 'Invalid or expired nonce.'});
     }
 
-    if (Date.now() > nonceData.expiresAt) {
+    if (Date.now() > storedNonceData.expiresAt) {
         console.error(`❌ Nonce expired: ${nonce}`);
         delete nonceStore[nonce];
         return res.status(400).send({error: 'Nonce has expired.'});
     }
 
-    if (calidusKey !== nonceData.calidusKey) {
+    if (calidusKey !== storedNonceData.calidusId) {
         console.error(`❌ Provided Calidus Key does not match the requested key: ${calidusKey}`);
         return res.status(400).send({error: 'Provided Calidus Key does not match the requested key.'});
     }
 
     const nonceToVerify = HASH_NONCE_BEFORE_VERIFY ? hashNonce(nonce) : nonce;
-
+console.log(nonceToVerify)
     // Use the cached public key for signature validation
-    const isValid = verifyCalidusSignature(signature, nonceToVerify, nonceData.calidusPubKey);
-
+    const isValid = verifyCalidusSignature(signature, nonceToVerify, storedNonceData.calidusPubKey);
+console.log(isValid)
     if (!isValid) {
         console.error(`❌ Signature verification failed for Calidus Key: ${calidusKey}`);
         return res.status(400).send({error: 'Signature verification failed.'});

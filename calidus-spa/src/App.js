@@ -1,7 +1,7 @@
 import './App.css';
 import { Button, Image, TextInput } from '@mantine/core';
 import '@mantine/core/styles.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { requestAuth } from './service/requestAuth';
 import { verifySignature } from './service/verifySignature';
 
@@ -11,41 +11,89 @@ function App() {
   const [signature, setSignature] = useState('');
   const [poolId, setPoolId] = useState('');
   const [step, setStep] = useState(0);
+  const [verificationStatus, setVerificationStatus] = useState('');
+
+  // Load saved state on component mount
+  useEffect(() => {
+    const savedNonceData = localStorage.getItem('nonceData');
+    const savedStep = localStorage.getItem('authStep');
+    
+    if (savedNonceData) {
+      setNonceData(JSON.parse(savedNonceData));
+    }
+    
+    if (savedStep) {
+      setStep(parseInt(savedStep, 10));
+    }
+  }, []);
 
   const handleRequestAuth = async () => {
     try {
       const response = await requestAuth(calidusKey, poolId);
       if (response) {
         alert('Nonce requested successfully');
+        
+        // Save to localStorage
+        localStorage.setItem('nonceData', JSON.stringify(response));
+        localStorage.setItem('authStep', '1');
+        
+        setNonceData(response);
+        setStep(1);
       }
-      setNonceData(response);
-      setStep(1);
     } catch (error) {
       console.error('Error requesting nonce:', error);
-      alert('Failed to request nonce');
+      alert('Failed to request nonce: ' + (error.message || 'Unknown error'));
     }
   }
 
   const handleVerifySignature = async () => {
+    console.log(nonceData)    
+    if (!nonceData || !nonceData.nonce || !nonceData.calidusId) {
+      alert('Nonce data is invalid or expired. Please request a new nonce.');
+      handleReset();
+      return;
+    }
+
     try {
-      const response = await verifySignature(calidusKey, signature, nonceData);
-      if (response) {
-        alert('Signature verified successfully');
-      }
+      setVerificationStatus('');
+      const response = await verifySignature(nonceData, signature, nonceData.calidusId);
+      console.log(response)
+      console.log(nonceData)
+      setVerificationStatus('success');
+      alert(response.message || 'Verification successful!');
+      
+      // Clear storage after successful verification
+      localStorage.removeItem('nonceData');
+      localStorage.removeItem('authStep');
     } catch (error) {
       console.error('Error verifying signature:', error);
-      alert('Failed to verify signature');
+      setVerificationStatus('error');
+      alert(error.message || 'Verification failed');
+      
+      // If the error indicates an expired or invalid nonce, reset the form
+      if (error.message && (error.message.includes('expired') || error.message.includes('Invalid'))) {
+        handleReset();
+      }
     }
+  }
+
+  const handleReset = () => {
+    setStep(0);
+    setNonceData(null);
+    setSignature('');
+    setVerificationStatus('');
+    localStorage.removeItem('nonceData');
+    localStorage.removeItem('authStep');
   }
 
   return (
     <div className="App">
       <Image src={'./FullLogo_Transparent.png'} w={'40vw'} h={"auto"}/>
       <div className='Calidus-Container'>
-      {step == 0?
+      {step === 0 ?
       <>
-      <TextInput placeholder="Enter the pool ID" onChange={(e)=> setPoolId(e.target.value)}  w={'100%'}/>
-      <TextInput placeholder="Enter you Calidus Key" onChange={(e)=> setCalidusKey(e.target.value)}  w={'100%'}/>
+      <TextInput placeholder="Enter the pool ID" value={poolId} onChange={(e)=> setPoolId(e.target.value)} w={'100%'}/>
+      <TextInput placeholder="Enter your Calidus Key" value={calidusKey} onChange={(e)=> setCalidusKey(e.target.value)} w={'100%'}/>
         
         <Button color='violet' w={'100%'} onClick={handleRequestAuth}>
         Request Authentication
@@ -56,14 +104,9 @@ function App() {
         <>
           <TextInput
             type="text"
-            placeholder="Paste signature"
+            placeholder="Nonce (copy this value)"
             value={nonceData.nonce}
-            w={'100%'}
-          />
-          <TextInput
-            type="text"
-            placeholder="Paste signature"
-            value={nonceData.calidusId}
+            readOnly
             w={'100%'}
           />
           <TextInput
@@ -73,13 +116,28 @@ function App() {
             onChange={(e) => setSignature(e.target.value)}
             w={'100%'}
           />
-          <Button  color='violet' w={'100%'}  onClick={handleVerifySignature}>Verify Signature</Button>
+          <Button 
+            color={verificationStatus === 'success' ? 'green' : verificationStatus === 'error' ? 'red' : 'violet'} 
+            w={'100%'} 
+            onClick={handleVerifySignature}
+            mb={10}
+          >
+            Verify Signature
+          </Button>
+          <Button 
+            variant="outline" 
+            color="gray" 
+            w={'100%'} 
+            onClick={handleReset}
+          >
+            Reset
+          </Button>
         </>
       )}
 
       </div>
       
-      <div class="glow-background"></div>
+      <div className="glow-background"></div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-export const verifySignature = async (calidusKey, nonceData, signature) => {
+export const verifySignature = async (nonceData, signature, calidusKey) => {
     try {
       const response = await fetch(`http://localhost:3050/verify-signature`, {
         method: 'POST',
@@ -6,17 +6,22 @@ export const verifySignature = async (calidusKey, nonceData, signature) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          calidusKey,
-          nonce: nonceData?.nonce,
-          signature,
+          calidusKey: calidusKey,
+          nonce: nonceData.nonce,
+          signature: signature
         }),
       });
 
-      if (!response.ok) throw new Error('Verification failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Verification failed');
+      }
+      
       const data = await response.json();
+      console.log(data)
       return data;
     } catch (err) {
-      console.error(err);
-        throw new Error(err);
+      console.error('Error verifying signature:', err);
+      throw err;
     }
   };
