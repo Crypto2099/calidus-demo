@@ -1,0 +1,50 @@
+.App {
+    position: relative;
+    overflow: hidden; /* hides the overflowing blur */
+    height: 100vh; /* or any height you want */
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    /* justify-content: space-evenly; */
+    background-color: black
+  }
+.Calidus-Container {
+width: 50%;
+  z-index: 1;
+  display: flex;
+  padding: 0 20px;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap:20px
+  
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .Calidus-Container {
+    width: 80%;
+  }
+}
+
+.glow-background {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  height: 60vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(162, 0, 255, 0.199) 20%, rgba(162, 0, 255, 0.207) 100%);
+  box-shadow:
+    0 0 80px 50px rgba(162, 0, 255, 0.15),
+    0 0 160px 80px rgba(162, 0, 255, 0.08);
+  filter: blur(12px);
+  z-index: 0;
+
+  @media (max-width: 768px) {
+
+      top: 0%;
+
+  }
+}
